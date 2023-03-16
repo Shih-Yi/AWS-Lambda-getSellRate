@@ -1,18 +1,28 @@
-'use strict';
+import axios from "axios"
+import cheerio from "cheerio"
 
-module.exports.hello = async (event) => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: 'Go Serverless v1.0! Your function executed successfully!',
-        input: event,
-      },
-      null,
-      2
-    ),
-  };
-
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
-};
+export const getSellRate = async () => {
+  try {
+    const response = await axios(
+      "https://www.esunbank.com.tw/bank/personal/deposit/rate/forex/foreign-exchange-rates"
+    )
+    const $ = cheerio.load(response.data)
+    const sellRate = $(
+      ".px-3.py-2.p-lg-0.NZD.currency .SellDecreaseRate"
+    ).text()
+    console.log(sellRate)
+    if (sellRate < 19.5) {
+      console.log(`${sellRate} is less then 19.5`)
+    }
+    return {
+      statusCode: 200,
+      body: { twdToNZDSellRate: sellRate },
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      statusCode: 500,
+      body: { msg: error },
+    }
+  }
+}
